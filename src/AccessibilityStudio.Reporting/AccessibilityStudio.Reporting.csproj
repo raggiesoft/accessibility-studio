@@ -22,6 +22,9 @@ PLAIN-ENGLISH OVERVIEW (100-LEVEL GUIDE):
     <Company>RaggieSoft Media</Company>
     <Product>RaggieSoft Accessibility Studio Reporting Engine</Product>
     <Authors>Michael P. Ragsdale</Authors>
+    <!-- Emit XML documentation file so Microsoft/.NET DocFX (`docs/docfx.json`) builds full API docs -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1591</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\AccessibilityStudio.Core\AccessibilityStudio.Core.csproj" />

@@ -126,7 +126,7 @@ public static partial class HtmlSourceAccessibilityAnalyzer
     private static partial Regex StripTagsRegex();
 
     /// <summary>
-    /// Runs all source-level HTML5 & WAI-ARIA checks against <paramref name="htmlSource"/>,
+    /// Runs all source-level HTML5 &amp; WAI-ARIA checks against <paramref name="htmlSource"/>,
     /// returning both exact line/column findings and the document's structural outline.
     /// </summary>
     public static (IReadOnlyList<AuditFinding> Findings, IReadOnlyList<DocumentOutlineNode> Outline) Analyze(

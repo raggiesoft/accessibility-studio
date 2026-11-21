@@ -6,6 +6,9 @@
 *.suo
 TestResults/
 artifacts/
+docs/_site/
+docs/api/*.yml
+docs/api/.manifest
 
 # OS metadata
 .DS_Store

@@ -18,6 +18,7 @@
 
 using System.Text.Json;
 using AccessibilityStudio.Core.Analysis;
+using AccessibilityStudio.Core.Documentation;
 using AccessibilityStudio.Core.Models;
 using AccessibilityStudio.Core.Refactoring;
 using AccessibilityStudio.Core.Services;
@@ -37,6 +38,7 @@ public static class Program
         TestHtmlAnalyzerAndGuidedRefactoring();
         TestCssAndWebVttAnalyzers();
         TestEnterpriseExportersPassOwnWcagAudit();
+        TestOfflineHelpCatalogPassesOwnWcagAudit();
 
         Console.WriteLine($"✅ ALL {_passed} ASSERTIONS PASSED!");
         return 0;
@@ -162,5 +164,67 @@ public static class Program
         // 3. Validate CSV escapes formula-injection characters (`=cmd...` -> `'=cmd...` or inside snippet)
         string csv = EnterpriseReportExporter.BuildCsvReport(wsReport);
         Assert(csv.Contains("WCAG-IMG-ALT"), "CSV contains WCAG-IMG-ALT row");
+    }
+
+    private static void TestOfflineHelpCatalogPassesOwnWcagAudit()
+    {
+        IReadOnlyList<HelpTopic> topics = StudioHelpCatalog.GetAllTopics();
+        IReadOnlyList<HelpRuleEntry> rules = StudioHelpCatalog.GetAllRuleEntries();
+
+        Assert(topics.Count >= 10, $"Help catalog defines >= 10 conceptual & reference chapters (found {topics.Count})");
+        Assert(rules.Count == 25, $"Help catalog documents all 25 built-in rules (found {rules.Count})");
+
+        // Verify context-sensitive F1 routing jumps straight to `#rule-<RuleId>`
+        (string ruleTopic, string? ruleAnchor) = StudioHelpCatalog.ResolveContextTopic(
+            selectedRuleId: "WCAG-TABLE-FAKE-HEADER",
+            preferSelectedRule: true,
+            activeCenterTabIndex: 0,
+            activeBottomTabIndex: 0);
+        Assert(ruleTopic == "rule-reference" && ruleAnchor == "rule-WCAG-TABLE-FAKE-HEADER",
+            "Context-sensitive F1 resolves selected RuleId to #rule-WCAG-TABLE-FAKE-HEADER");
+
+        // Verify instant offline search ranks Rule IDs accurately
+        IReadOnlyList<HelpSearchHit> hits = StudioHelpCatalog.Search("WCAG-TABLE-FAKE-HEADER");
+        Assert(hits.Count > 0 && hits[0].AnchorId == "rule-WCAG-TABLE-FAKE-HEADER",
+            "Offline search ranks exact RuleId hit first");
+
+        // Self-audit our shared `help.css` under `StrictEnterpriseAll`: MUST have 0 CSS issues!
+        var helpCssFindings = CssAccessibilityAnalyzer.Analyze(
+            StudioHelpCatalog.BuildHelpStylesheetCss(),
+            "help.css",
+            ComplianceProfile.StrictEnterpriseAll);
+        Assert(helpCssFindings.Count == 0,
+            $"help.css must have 0 CSS accessibility violations (found {helpCssFindings.Count}: {string.Join(", ", helpCssFindings.Select(f => f.RuleId))})");
+
+        // Self-audit EVERY generated HTML5 Help chapter under `StrictEnterpriseAll`: MUST have 0 WCAG violations!
+        foreach (HelpTopic topic in topics)
+        {
+            string topicHtml = StudioHelpCatalog.BuildStandaloneTopicHtml(topic.TopicId, anchorId: null, externalStylesheet: false);
+            FileAuditResult selfAudit = WorkspaceProjectService.AuditContent(
+                topicHtml,
+                $"{topic.TopicId}.html",
+                ComplianceProfile.StrictEnterpriseAll);
+
+            Assert(selfAudit.Findings.Count == 0,
+                $"Help chapter {topic.TopicId}.html must have 0 WCAG violations (found {selfAudit.Findings.Count}: {string.Join(", ", selfAudit.Findings.Select(f => $"{f.RuleId}@L{f.StartLine}"))})");
+        }
+
+        // Verify disk bundle export writes `index.html`, `help.css`, `search-index.json`, and all chapter pages
+        string tempDir = Path.Combine(Path.GetTempPath(), $"a11y-help-test-{Guid.NewGuid():N}");
+        try
+        {
+            IReadOnlyList<string> written = StudioHelpCatalog.ExportOfflineHtml5Bundle(tempDir);
+            Assert(written.Count == topics.Count + 3, $"Exported {topics.Count + 3} offline Help files");
+            Assert(File.Exists(Path.Combine(tempDir, "index.html")), "Exported index.html");
+            Assert(File.Exists(Path.Combine(tempDir, "help.css")), "Exported help.css");
+            Assert(File.Exists(Path.Combine(tempDir, "search-index.json")), "Exported search-index.json");
+        }
+        finally
+        {
+            if (Directory.Exists(tempDir))
+            {
+                Directory.Delete(tempDir, recursive: true);
+            }
+        }
     }
 }

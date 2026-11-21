@@ -1,0 +1,10 @@
+# ==============================================================================
+# FILE: docs/articles/toc.yml
+# PURPOSE: Sidebar Table of Contents for conceptual Markdown articles in DocFX
+# ==============================================================================
+- name: Overview & Modern Help Architecture
+  href: modern-windows-help-architecture.md
+- name: 25-Rule WCAG 2.2 & 508 Reference
+  href: rule-catalog.md
+- name: Headless CLI & Enterprise MSI/GPO
+  href: cli-and-enterprise-deployment.md

@@ -37,7 +37,19 @@ dotnet run --project src/AccessibilityStudio.Cli/AccessibilityStudio.Cli.csproj 
 
 # 4. Launch the Windows Forms IDE (on Windows 11 Pro)
 dotnet run --project src/AccessibilityStudio.WinForms/AccessibilityStudio.WinForms.csproj
+
+# 5. Export the standalone offline HTML5 F1 Help bundle (or build DocFX site from docs/docfx.json)
+dotnet run --project src/AccessibilityStudio.Cli/AccessibilityStudio.Cli.csproj -- export-help ./artifacts/Help
 ```
+
+---
+
+## Offline HTML5 `F1` Help Viewer & DocFX Documentation
+
+Rather than compiling legacy Windows 2000/XP `.chm` archives (which render inside retired Internet Explorer `mshtml.dll`, lack `prefers-color-scheme` and `forced-colors` support, and fail under Windows Mark-of-the-Web network restrictions), Accessibility Studio provides:
+
+- **Context-Sensitive `F1` / `Shift+F1` Workstation Help (`HelpViewerForm`)**: Press **`F1`** anywhere in the IDE (or **`Shift+F1`** on any Error List finding to jump straight to `#rule-<RuleId>`) for a two-pane **Contents**, **Rule Index (25)**, and **Instant Offline Search** manual served locally via `WebView2` (`https://help.a11y.local`) with full Windows 11 Dark/Light/High-Contrast synchronization.
+- **DocFX Static Documentation & C# XML API Site (`docs/docfx.json`)**: Compatible out of the box with Microsoft/.NET Foundation's `docfx` generator (`docfx docs/docfx.json`).
 
 ---
 

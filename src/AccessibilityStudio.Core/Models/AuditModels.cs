@@ -36,7 +36,7 @@ public enum AuditSeverity
     /// <summary>Blocks keyboard or screen-reader access outright (e.g. missing form label, focus trap, missing alt).</summary>
     Critical = 0,
 
-    /// <summary>Causes major barriers (e.g. insufficient <4.5:1 text contrast, fake bold table headers, suppressed focus ring).</summary>
+    /// <summary>Causes major barriers (e.g. insufficient &lt;4.5:1 text contrast, fake bold table headers, suppressed focus ring).</summary>
     Serious = 1,
 
     /// <summary>Degrades structural navigation (e.g. skipped heading level H1 -> H4, unlabeled duplicate nav landmark).</summary>
@@ -59,10 +59,10 @@ public enum ComplianceProfile
     /// <summary>Minimum WCAG 2.2 Level A baseline checks only.</summary>
     Wcag22LevelA = 1,
 
-    /// <summary>ADA Title II Public-Sector & Higher-Education Web Mandate (WCAG 2.1/2.2 AA + Captions + Contrast).</summary>
+    /// <summary>ADA Title II Public-Sector &amp; Higher-Education Web Mandate (WCAG 2.1/2.2 AA + Captions + Contrast).</summary>
     AdaTitleIIWeb = 2,
 
-    /// <summary>All rules including AAA & modern CSS resilience advisories.</summary>
+    /// <summary>All rules including AAA &amp; modern CSS resilience advisories.</summary>
     StrictEnterpriseAll = 3
 }
 
@@ -81,7 +81,7 @@ public enum SourceKind
 }
 
 /// <summary>
-/// Represents a single source-level WCAG 2.1/2.2 & Revised Section 508 Web finding
+/// Represents a single source-level WCAG 2.1/2.2 &amp; Revised Section 508 Web finding
 /// with exact 1-based Line and Column coordinates so double-clicking a row in the
 /// IDE Error List jumps the cursor straight to the offending markup!
 /// </summary>
@@ -142,9 +142,9 @@ public sealed record AuditFinding
 }
 
 /// <summary>
-/// Represents a structural landmark (`<header>`, `<nav>`, `<main>`, `<footer>`) or
-/// heading (`<h1>`–`<h6>`) extracted from an HTML file to populate the IDE's
-/// Screen-Reader Outline & Landmark Tree panel.
+/// Represents a structural landmark (<c>&lt;header&gt;</c>, <c>&lt;nav&gt;</c>, <c>&lt;main&gt;</c>, <c>&lt;footer&gt;</c>) or
+/// heading (<c>&lt;h1&gt;</c>–<c>&lt;h6&gt;</c>) extracted from an HTML file to populate the IDE's
+/// Screen-Reader Outline &amp; Landmark Tree panel.
 /// </summary>
 public sealed record DocumentOutlineNode
 {
@@ -248,7 +248,7 @@ public sealed class AccessibilityWorkspaceProject
 }
 
 /// <summary>
-/// Tamper-evident audit & remediation log entry recording SHA-256 hashes before
+/// Tamper-evident audit &amp; remediation log entry recording SHA-256 hashes before
 /// and after guided source-code fixes.
 /// </summary>
 public sealed record AuditLogEntry

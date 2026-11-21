@@ -36,10 +36,12 @@
 // ================================================================================
 
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.Text;
 using System.Text.Json;
 using System.Windows.Forms;
+using AccessibilityStudio.Core.Documentation;
 using AccessibilityStudio.Core.Models;
 using AccessibilityStudio.Core.Refactoring;
 using AccessibilityStudio.Core.Services;
@@ -97,6 +99,10 @@ public sealed class MainIdeForm : Form
 
     // Cancellation token source for stopping long-running polite batch scans cleanly.
     private CancellationTokenSource? _batchCts;
+
+    // Reusable non-modal F1 Offline HTML5 Help Viewer window (`HelpViewerForm`) so engineers
+    // can dock Help side-by-side on a second monitor while editing source code!
+    private HelpViewerForm? _helpViewerWindow;
 
     // Readiness flags for our three WebView2 Chromium instances.
     private bool _editorWebViewReady;
@@ -296,6 +302,13 @@ public sealed class MainIdeForm : Form
             SystemEvents.UserPreferenceChanged += OnSystemUserPreferenceChanged;
         }
 
+        // Route standard Win32 `WM_HELP` (`F1`) events to our context-sensitive HTML5 Help Viewer
+        HelpRequested += (_, hlpevent) =>
+        {
+            hlpevent.Handled = true;
+            OpenContextSensitiveHelp(forceRuleTopic: false);
+        };
+
         // Initialize WebView2 instances and proportional splitters once the window handle & DPI layout are ready
         Load += async (_, _) =>
         {
@@ -391,7 +404,7 @@ public sealed class MainIdeForm : Form
         ToolStripMenuItem mnuTools = new("&Tools");
         mnuTools.DropDownItems.Add(CreateMenuItem("WCAG 2.2 Color &Contrast Workbench…", Keys.Control | Keys.Shift | Keys.C, (_, _) =>
         {
-            using ContrastWorkbenchDialog dlg = new();
+            using ContrastWorkbenchDialog dlg = new(_preferredColorScheme);
             dlg.ShowDialog(this);
         }));
 
@@ -403,7 +416,19 @@ public sealed class MainIdeForm : Form
         mnuTools.DropDownItems.Add(mnuTheme);
 
         ToolStripMenuItem mnuHelp = new("&Help");
-        mnuHelp.DropDownItems.Add(CreateMenuItem("&About RaggieSoft Accessibility Studio…", Keys.F1, (_, _) =>
+        mnuHelp.DropDownItems.Add(CreateMenuItem("&View Help && Context Topic", Keys.F1, (_, _) => OpenContextSensitiveHelp(forceRuleTopic: false)));
+        mnuHelp.DropDownItems.Add(CreateMenuItem("Rule Reference for &Selected Finding", Keys.Shift | Keys.F1, (_, _) => OpenContextSensitiveHelp(forceRuleTopic: true)));
+        mnuHelp.DropDownItems.Add(new ToolStripSeparator());
+        mnuHelp.DropDownItems.Add(CreateMenuItem("&Quickstart && Compliance Profiles", Keys.None, (_, _) => OpenStudioHelp("quickstart-workspace")));
+        mnuHelp.DropDownItems.Add(CreateMenuItem("&Guided Source Refactoring Guide", Keys.None, (_, _) => OpenStudioHelp("guided-refactoring")));
+        mnuHelp.DropDownItems.Add(CreateMenuItem("Complete &25-Rule WCAG && 508 Catalog", Keys.None, (_, _) => OpenStudioHelp("rule-reference")));
+        mnuHelp.DropDownItems.Add(CreateMenuItem("Headless &CLI && CI/CD Scanner Reference", Keys.None, (_, _) => OpenStudioHelp("cli-cicd-reference")));
+        mnuHelp.DropDownItems.Add(CreateMenuItem("&Enterprise MSI && Group Policy Guide", Keys.None, (_, _) => OpenStudioHelp("enterprise-msi-gpo")));
+        mnuHelp.DropDownItems.Add(CreateMenuItem("&Keyboard Shortcuts", Keys.None, (_, _) => OpenStudioHelp("keyboard-shortcuts")));
+        mnuHelp.DropDownItems.Add(new ToolStripSeparator());
+        mnuHelp.DropDownItems.Add(CreateMenuItem("Open &Online Documentation (a11y.raggiesoft.com/docs)…", Keys.None, (_, _) => LaunchOnlineDocumentation()));
+        mnuHelp.DropDownItems.Add(new ToolStripSeparator());
+        mnuHelp.DropDownItems.Add(CreateMenuItem("&About RaggieSoft Accessibility Studio…", Keys.None, (_, _) =>
         {
             using AboutEnterpriseDialog dlg = new();
             dlg.ShowDialog(this);
@@ -462,9 +487,10 @@ public sealed class MainIdeForm : Form
         _mainToolbar.Items.Add(CreateToolbarButton("🛡 SARIF 2.1", "Export OASIS SARIF 2.1.0 static analysis file", (_, _) => PromptExportReport("sarif")));
         _mainToolbar.Items.Add(CreateToolbarButton("🎨 Contrast", "Open WCAG 2.2 Color Contrast Workbench", (_, _) =>
         {
-            using ContrastWorkbenchDialog dlg = new();
+            using ContrastWorkbenchDialog dlg = new(_preferredColorScheme);
             dlg.ShowDialog(this);
         }));
+        _mainToolbar.Items.Add(CreateToolbarButton("❓ Help (F1)", "Open offline HTML5 Help Manual & Rule Reference (F1 / Shift+F1)", (_, _) => OpenContextSensitiveHelp(forceRuleTopic: false)));
 
         MainMenuStrip = _mainMenu;
     }
@@ -659,13 +685,16 @@ public sealed class MainIdeForm : Form
 
         Button btnJump = new() { Text = "Jump to Line (Enter)", AutoSize = true };
         Button btnDiff = new() { Text = "Preview Guided Fix Diff (Ctrl+D)", AutoSize = true };
+        Button btnRuleHelp = new() { Text = "📖 Rule Help (Shift+F1)", AutoSize = true };
         btnJump.Click += (_, _) => JumpToSelectedFinding();
         btnDiff.Click += (_, _) => PreviewGuidedFixDiff();
+        btnRuleHelp.Click += (_, _) => OpenContextSensitiveHelp(forceRuleTopic: true);
 
         filterBar.Controls.Add(new Label { Text = "Show:", AutoSize = true, Padding = new Padding(0, 5, 4, 0) });
         filterBar.Controls.Add(_cmbSeverityFilter);
         filterBar.Controls.Add(btnJump);
         filterBar.Controls.Add(btnDiff);
+        filterBar.Controls.Add(btnRuleHelp);
 
         // Configure explicit typed columns for our Error List DataGridView
         _errorGrid.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = nameof(AuditFinding.Severity), HeaderText = "Severity", Width = 88 });
@@ -698,14 +727,17 @@ public sealed class MainIdeForm : Form
         _btnPreviewDiff = new Button { Text = "🔍 Preview Side-by-Side Diff in Monaco", AutoSize = true };
         _btnApplyFix = new Button { Text = "✔ Apply Guided Fix to Editor Buffer", AutoSize = true };
         _btnExitDiff = new Button { Text = "↩ Exit Diff View", AutoSize = true, Enabled = false };
+        Button btnFixRuleHelp = new() { Text = "📖 Full Rule Documentation (Shift+F1)", AutoSize = true };
 
         _btnPreviewDiff.Click += (_, _) => PreviewGuidedFixDiff();
         _btnApplyFix.Click += (_, _) => ApplyGuidedFixToBuffer();
         _btnExitDiff.Click += (_, _) => ExitDiffMode();
+        btnFixRuleHelp.Click += (_, _) => OpenContextSensitiveHelp(forceRuleTopic: true);
 
         actionRow.Controls.Add(_btnPreviewDiff);
         actionRow.Controls.Add(_btnApplyFix);
         actionRow.Controls.Add(_btnExitDiff);
+        actionRow.Controls.Add(btnFixRuleHelp);
 
         tabGuidedFix.Controls.Add(_txtFixDetails);
         tabGuidedFix.Controls.Add(actionRow);
@@ -1755,10 +1787,67 @@ public sealed class MainIdeForm : Form
             {
                 _ssoBrowserWebView.CoreWebView2.Profile.PreferredColorScheme = scheme;
             }
+            if (_helpViewerWindow is { IsDisposed: false })
+            {
+                _helpViewerWindow.ApplyColorSchemePreference(scheme);
+            }
         }
         catch
         {
             // Ignore if WebView2 profile is still initializing
+        }
+    }
+
+    private void OpenContextSensitiveHelp(bool forceRuleTopic)
+    {
+        AuditFinding? selected = GetSelectedFinding();
+        bool errorPaneActive = forceRuleTopic || _errorGrid.Focused || _txtFixDetails.Focused;
+        (string topicId, string? anchorId) = StudioHelpCatalog.ResolveContextTopic(
+            selected?.RuleId,
+            preferSelectedRule: errorPaneActive,
+            activeCenterTabIndex: _centerTabs.SelectedIndex,
+            activeBottomTabIndex: _bottomTabs.SelectedIndex);
+
+        OpenStudioHelp(topicId, anchorId);
+    }
+
+    private void OpenStudioHelp(string topicId, string? anchorId = null)
+    {
+        if (_helpViewerWindow is null || _helpViewerWindow.IsDisposed)
+        {
+            _helpViewerWindow = new HelpViewerForm(_preferredColorScheme, topicId, anchorId);
+            _helpViewerWindow.Show(this);
+        }
+        else
+        {
+            if (_helpViewerWindow.WindowState == FormWindowState.Minimized)
+            {
+                _helpViewerWindow.WindowState = FormWindowState.Normal;
+            }
+            _helpViewerWindow.ApplyColorSchemePreference(_preferredColorScheme);
+            _helpViewerWindow.NavigateToTopic(topicId, anchorId);
+            _helpViewerWindow.Activate();
+        }
+    }
+
+    private void LaunchOnlineDocumentation()
+    {
+        AuditFinding? selected = GetSelectedFinding();
+        string url = selected is not null
+            ? $"{StudioHelpCatalog.OnlineDocsBaseUrl}#rule-{selected.RuleId}"
+            : StudioHelpCatalog.OnlineDocsBaseUrl;
+
+        try
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = url,
+                UseShellExecute = true
+            });
+        }
+        catch
+        {
+            // Ignore if corporate shell URL launching is restricted
         }
     }
 

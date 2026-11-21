@@ -1,0 +1,46 @@
+{
+  "$schema": "https://raw.githubusercontent.com/dotnet/docfx/main/schemas/docfx.schema.json",
+  "metadata": [
+    {
+      "src": [
+        {
+          "src": "../src",
+          "files": [
+            "AccessibilityStudio.Core/AccessibilityStudio.Core.csproj",
+            "AccessibilityStudio.Reporting/AccessibilityStudio.Reporting.csproj",
+            "AccessibilityStudio.Cli/AccessibilityStudio.Cli.csproj"
+          ]
+        }
+      ],
+      "dest": "api",
+      "includePrivateMembers": false,
+      "disableGitFeatures": false
+    }
+  ],
+  "build": {
+    "content": [
+      {
+        "files": [
+          "index.md",
+          "toc.yml",
+          "articles/**.md",
+          "articles/toc.yml",
+          "api/**.yml",
+          "api/index.md"
+        ]
+      }
+    ],
+    "dest": "_site",
+    "template": [
+      "default",
+      "modern"
+    ],
+    "globalMetadata": {
+      "_appTitle": "RaggieSoft Accessibility Studio Documentation",
+      "_appName": "Accessibility Studio",
+      "_appFooter": "MIT License • RaggieSoft Accessibility Studio by Michael P. Ragsdale • All sample narrative entities (CPI, VDU, OmniCorp, LLCs) are fictitious.",
+      "_enableSearch": true,
+      "_enableNewTab": true
+    }
+  }
+}

@@ -14,11 +14,13 @@
 using System.Drawing;
 using System.Windows.Forms;
 using AccessibilityStudio.Core.Analysis;
+using Microsoft.Web.WebView2.Core;
 
 namespace AccessibilityStudio.WinForms.Forms;
 
 public sealed class ContrastWorkbenchDialog : Form
 {
+    private readonly CoreWebView2PreferredColorScheme _colorScheme;
     private readonly TextBox _txtForeground = new() { Text = "#6F7785", Width = 130, AccessibleName = "Foreground Hex Color" };
     private readonly TextBox _txtBackground = new() { Text = "#FFFFFF", Width = 130, AccessibleName = "Background Hex Color" };
     private readonly Label _lblRatio = new() { AutoSize = true, Font = new Font("Segoe UI", 16F, FontStyle.Bold) };
@@ -26,8 +28,10 @@ public sealed class ContrastWorkbenchDialog : Form
     private readonly Panel _previewPanel = new() { Height = 92, Dock = DockStyle.Fill, BorderStyle = BorderStyle.FixedSingle, Padding = new Padding(14) };
     private readonly Label _lblPreviewSample = new() { Dock = DockStyle.Fill, Text = "Sample Heading (18pt Bold) — The quick brown fox jumps over the lazy dog (14px regular body copy).", Font = new Font("Segoe UI", 11F, FontStyle.Regular) };
 
-    public ContrastWorkbenchDialog()
+    public ContrastWorkbenchDialog(CoreWebView2PreferredColorScheme colorScheme = CoreWebView2PreferredColorScheme.Auto)
     {
+        _colorScheme = colorScheme;
+
         Text = "WCAG 2.2 Color Contrast & CSS Token Workbench";
         StartPosition = FormStartPosition.CenterParent;
         Size = new Size(580, 390);
@@ -35,6 +39,14 @@ public sealed class ContrastWorkbenchDialog : Form
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
         MinimizeBox = false;
+
+        // Enable standard Windows title-bar `?` Help button and `F1` context-sensitive Help!
+        HelpButton = true;
+        HelpRequested += (_, hlpevent) =>
+        {
+            hlpevent.Handled = true;
+            OpenWorkbenchHelp();
+        };
 
         TableLayoutPanel root = new()
         {
@@ -84,8 +96,11 @@ public sealed class ContrastWorkbenchDialog : Form
         inputsRow.Controls.Add(btnPickBg);
 
         FlowLayoutPanel toolsRow = new() { Dock = DockStyle.Fill, AutoSize = true, Padding = new Padding(0, 6, 0, 8) };
+        Button btnHelp = new() { Text = "❓ Luminance Help (F1)", AutoSize = true };
+        btnHelp.Click += (_, _) => OpenWorkbenchHelp();
         toolsRow.Controls.Add(btnSwap);
         toolsRow.Controls.Add(btnAutoFix);
+        toolsRow.Controls.Add(btnHelp);
 
         _previewPanel.Controls.Add(_lblPreviewSample);
 
@@ -135,5 +150,11 @@ public sealed class ContrastWorkbenchDialog : Form
             $"Normal Text AA (4.5:1): {(eval.PassesNormalAA ? "PASS" : "FAIL")}   |   " +
             $"Normal Text AAA (7.0:1): {(eval.PassesNormalAAA ? "PASS" : "FAIL")}   |   " +
             $"Large Text & UI 1.4.11 (3.0:1): {(eval.PassesLargeTextOrUiAA ? "PASS" : "FAIL")}";
+    }
+
+    private void OpenWorkbenchHelp()
+    {
+        using HelpViewerForm helpDlg = new(_colorScheme, "contrast-workbench");
+        helpDlg.ShowDialog(this);
     }
 }

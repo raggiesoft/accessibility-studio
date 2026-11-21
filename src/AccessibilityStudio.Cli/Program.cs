@@ -15,6 +15,7 @@
 //     2 = Blocking WCAG 2.2 / Section 508 Web violations detected
 // ================================================================================
 
+using AccessibilityStudio.Core.Documentation;
 using AccessibilityStudio.Core.Models;
 using AccessibilityStudio.Core.Services;
 using AccessibilityStudio.Reporting.Exporters;
@@ -35,6 +36,23 @@ public static class Program
         if (command is "--version" or "-v")
         {
             Console.WriteLine("RaggieSoft Accessibility Studio CLI v1.0.0 (https://a11y.raggiesoft.com)");
+            return 0;
+        }
+
+        // Export standalone offline HTML5 Help bundle (`a11y-studio-cli export-help <output-dir>`)
+        // used by `stage-installaware-payload.ps1` and air-gapped documentation builds!
+        if (command == "export-help")
+        {
+            if (args.Length < 2 || string.IsNullOrWhiteSpace(args[1]))
+            {
+                Console.Error.WriteLine("Error: Expected `export-help <output-directory>` command.");
+                PrintUsage();
+                return 1;
+            }
+
+            string outDir = Path.GetFullPath(args[1]);
+            IReadOnlyList<string> written = StudioHelpCatalog.ExportOfflineHtml5Bundle(outDir);
+            Console.WriteLine($"[RaggieSoft Accessibility Studio] Exported {written.Count} offline HTML5 Help files to: {outDir}");
             return 0;
         }
 
@@ -154,6 +172,7 @@ public static class Program
         Console.WriteLine("RaggieSoft Accessibility Studio CLI (v1.0.0)");
         Console.WriteLine("Usage:");
         Console.WriteLine("  a11y-studio-cli scan <folder|file|schedule.csv|sitemap.xml> [options]");
+        Console.WriteLine("  a11y-studio-cli export-help <output-directory>");
         Console.WriteLine("Options:");
         Console.WriteLine("  --profile <Wcag22AA_Section508|Wcag22LevelA|AdaTitleIIWeb|StrictEnterpriseAll>");
         Console.WriteLine("  --fail-on <Critical|Serious|Moderate|Advisory>   (Default: Serious)");

@@ -33,8 +33,8 @@ public static class EnterpriseReportExporter
     };
 
     /// <summary>
-    /// Generates a standalone, zero-dependency, WCAG 2.2 Level AA & Section 508
-    /// compliant HTML5 Executive & Developer Audit Report.
+    /// Generates a standalone, zero-dependency, WCAG 2.2 Level AA &amp; Section 508
+    /// compliant HTML5 Executive &amp; Developer Audit Report.
     /// </summary>
     public static string BuildAccessibleHtmlReport(WorkspaceAuditReport report)
     {

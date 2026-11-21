@@ -1,0 +1,12 @@
+# ==============================================================================
+# FILE: docs/toc.yml
+# PURPOSE: Top-level navigation bar for Microsoft/.NET DocFX (`docfx docs/docfx.json`)
+# ==============================================================================
+- name: Home
+  href: index.md
+- name: Workstation & CLI Manual
+  href: articles/
+- name: C# .NET API Reference
+  href: api/
+- name: Product Portal
+  href: https://a11y.raggiesoft.com

@@ -180,7 +180,7 @@ public static partial class ColorContrastEngine
     /// Evaluates a foreground/background pair against all four WCAG 2.1/2.2 contrast thresholds:
     ///   - Normal Text AA  : `>= 4.5:1` (WCAG 1.4.3)
     ///   - Normal Text AAA : `>= 7.0:1` (WCAG 1.4.6)
-    ///   - Large Text / UI : `>= 3.0:1` (WCAG 1.4.3 Large & 1.4.11 Non-text Contrast)
+    ///   - Large Text / UI : `&gt;= 3.0:1` (WCAG 1.4.3 Large &amp; 1.4.11 Non-text Contrast)
     ///   - Large Text AAA  : `>= 4.5:1` (WCAG 1.4.6 Large)
     /// </summary>
     public static ContrastEvaluation Evaluate(RgbColor fg, RgbColor bg)
