@@ -20,6 +20,10 @@ PLAIN-ENGLISH OVERVIEW (100-LEVEL GUIDE):
     <LangVersion>latest</LangVersion>
     <AssemblyName>a11y-studio-cli</AssemblyName>
     <RootNamespace>AccessibilityStudio.Cli</RootNamespace>
+    <!-- Output directly into the logical `[INSTALLDIR]\CLI\` feature folder -->
+    <OutputPath>..\..\build\INSTALLDIR\$(Configuration)\CLI\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
     <Version>1.0.0</Version>
     <Company>RaggieSoft Media</Company>
     <Product>RaggieSoft Accessibility Studio CLI</Product>

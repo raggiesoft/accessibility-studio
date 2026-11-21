@@ -724,6 +724,47 @@ public static class StudioHelpCatalog
             Encoding.UTF8);
         writtenFiles.Add(searchJsonPath);
 
+        // 5. Write pluggable RaggieSoft Help Module manifest (`module.rshm.json`) so the
+        //    standalone `RaggieSoftHelp.exe` viewer auto-discovers this product's manual,
+        //    Contents tree, and 25-rule Index alongside any other installed RaggieSoft apps!
+        var moduleManifest = new
+        {
+            schemaVersion = "1.0",
+            moduleId = "raggiesoft.accessibility-studio",
+            productName = "RaggieSoft Accessibility Studio",
+            productVersion = "1.0.0",
+            publisher = "RaggieSoft Media (Michael P. Ragsdale)",
+            description = "Enterprise WCAG 2.2 AA & Revised Section 508 Workstation IDE, Guided Refactoring & Headless CLI Manual",
+            defaultTopicId = "welcome-overview",
+            onlineDocsUrl = OnlineDocsBaseUrl,
+            topics = s_topics.Select(t => new
+            {
+                id = t.TopicId,
+                fileName = $"{t.TopicId}.html",
+                category = t.Category,
+                title = t.Title,
+                summary = t.Summary,
+                keywords = t.Keywords
+            }),
+            indexEntries = s_rules.Select(r => new
+            {
+                entryId = r.RuleId,
+                displayText = $"{r.RuleId} — {r.Title}",
+                category = r.EngineCategory,
+                badge = r.Severity,
+                subtitle = $"{r.WcagCriterion} • {r.Section508Reference}",
+                topicId = "rule-reference",
+                anchorId = $"rule-{r.RuleId}"
+            })
+        };
+
+        string manifestPath = Path.Combine(outputDirectory, "module.rshm.json");
+        File.WriteAllText(
+            manifestPath,
+            JsonSerializer.Serialize(moduleManifest, new JsonSerializerOptions { WriteIndented = true }),
+            Encoding.UTF8);
+        writtenFiles.Add(manifestPath);
+
         return writtenFiles;
     }
 

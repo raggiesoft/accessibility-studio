@@ -1813,6 +1813,16 @@ public sealed class MainIdeForm : Form
 
     private void OpenStudioHelp(string topicId, string? anchorId = null)
     {
+        // 1. Prefer the standalone pluggable RaggieSoft Help Viewer (`[INSTALLDIR]\HelpViewer\RaggieSoftHelp.exe`
+        //    or Enterprise Shared `C:\Program Files\Common Files\RaggieSoft\HelpViewer\RaggieSoftHelp.exe`),
+        //    which uses Named Pipe Single-Instance IPC to reuse any already-open Help Viewer window!
+        if (TryLaunchStandaloneHelpViewer(topicId, anchorId, _preferredColorScheme))
+        {
+            return;
+        }
+
+        // 2. Fallback to the built-in in-process `HelpViewerForm` if the standalone `HelpViewer`
+        //    MSI feature was unchecked during a Custom installation!
         if (_helpViewerWindow is null || _helpViewerWindow.IsDisposed)
         {
             _helpViewerWindow = new HelpViewerForm(_preferredColorScheme, topicId, anchorId);
@@ -1827,6 +1837,69 @@ public sealed class MainIdeForm : Form
             _helpViewerWindow.ApplyColorSchemePreference(_preferredColorScheme);
             _helpViewerWindow.NavigateToTopic(topicId, anchorId);
             _helpViewerWindow.Activate();
+        }
+    }
+
+    internal static bool TryLaunchStandaloneHelpViewer(
+        string topicId,
+        string? anchorId,
+        CoreWebView2PreferredColorScheme scheme)
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return false;
+        }
+
+        // Check `[INSTALLDIR]\HelpViewer\RaggieSoftHelp.exe` (relative to `[INSTALLDIR]\StudioIDE\`)
+        // followed by Enterprise Shared Merge Module path `C:\Program Files\Common Files\RaggieSoft\HelpViewer\RaggieSoftHelp.exe`
+        string siblingViewer = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "HelpViewer", "RaggieSoftHelp.exe"));
+        string commonViewer = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.CommonProgramFiles),
+            "RaggieSoft",
+            "HelpViewer",
+            "RaggieSoftHelp.exe");
+
+        string? exePath = File.Exists(siblingViewer)
+            ? siblingViewer
+            : (File.Exists(commonViewer) ? commonViewer : null);
+
+        if (exePath is null)
+        {
+            return false;
+        }
+
+        string themeArg = scheme switch
+        {
+            CoreWebView2PreferredColorScheme.Dark => "dark",
+            CoreWebView2PreferredColorScheme.Light => "light",
+            _ => "auto"
+        };
+
+        try
+        {
+            ProcessStartInfo psi = new()
+            {
+                FileName = exePath,
+                UseShellExecute = false
+            };
+            psi.ArgumentList.Add("--module");
+            psi.ArgumentList.Add("raggiesoft.accessibility-studio");
+            psi.ArgumentList.Add("--topic");
+            psi.ArgumentList.Add(topicId);
+            if (!string.IsNullOrWhiteSpace(anchorId))
+            {
+                psi.ArgumentList.Add("--anchor");
+                psi.ArgumentList.Add(anchorId);
+            }
+            psi.ArgumentList.Add("--theme");
+            psi.ArgumentList.Add(themeArg);
+
+            Process.Start(psi);
+            return true;
+        }
+        catch
+        {
+            return false;
         }
     }
 

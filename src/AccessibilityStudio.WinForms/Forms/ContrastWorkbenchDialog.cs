@@ -154,6 +154,11 @@ public sealed class ContrastWorkbenchDialog : Form
 
     private void OpenWorkbenchHelp()
     {
+        if (MainIdeForm.TryLaunchStandaloneHelpViewer("contrast-workbench", null, _colorScheme))
+        {
+            return;
+        }
+
         using HelpViewerForm helpDlg = new(_colorScheme, "contrast-workbench");
         helpDlg.ShowDialog(this);
     }

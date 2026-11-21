@@ -1,6 +1,7 @@
-# Build outputs & Visual Studio caches
+# Build outputs, [INSTALLDIR] feature staging tree & Visual Studio caches
 [Bb]in/
 [Oo]bj/
+[Bb]uild/
 .vs/
 *.user
 *.suo

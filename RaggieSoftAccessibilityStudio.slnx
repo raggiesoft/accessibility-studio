@@ -8,6 +8,11 @@
     <Project Path="src/AccessibilityStudio.Core/AccessibilityStudio.Core.csproj" />
     <Project Path="src/AccessibilityStudio.Reporting/AccessibilityStudio.Reporting.csproj" />
     <Project Path="src/AccessibilityStudio.Cli/AccessibilityStudio.Cli.csproj" />
+    <Project Path="src/RaggieSoft.HelpViewer/RaggieSoft.HelpViewer.csproj">
+      <Platform Solution="*|Any CPU" Project="x64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|ARM64" Project="ARM64" />
+    </Project>
     <Project Path="src/AccessibilityStudio.WinForms/AccessibilityStudio.WinForms.csproj">
       <Platform Solution="*|Any CPU" Project="x64" />
       <Platform Solution="*|x64" Project="x64" />

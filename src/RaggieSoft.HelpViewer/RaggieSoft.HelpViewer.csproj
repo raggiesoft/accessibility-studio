@@ -1,0 +1,56 @@
+<!--
+================================================================================
+FILE: RaggieSoft.HelpViewer.csproj
+PROJECT: RaggieSoft Help Viewer (`RaggieSoftHelp.exe` — Pluggable Enterprise Help Engine)
+LICENSE: MIT License
+================================================================================
+PLAIN-ENGLISH OVERVIEW (100-LEVEL MODULAR WINDOWS HELP ARCHITECTURE):
+  What is this project?
+    `RaggieSoftHelp.exe` is a standalone, zero-app-coupling Windows 11 HTML5 Help
+    Viewer that ANY RaggieSoft desktop product (`Accessibility Studio`, `RaggieSoft
+    Launcher`, `StoreTrainer`, `Book Reader`, `The Listening Room`, `Backstage`) can
+    plug documentation modules (`module.rshm.json` + HTML5 chapters) into!
+
+  Why does it output to `..\..\build\INSTALLDIR\$(Configuration)\HelpViewer\`?
+    Every build in Visual Studio 2026 (`Ctrl+Shift+B` / `F5`) or `dotnet build`
+    mirrors the exact Windows Installer `[INSTALLDIR]` layout divided into clean,
+    isolated MSI Self-Healing Feature directories (`StudioIDE\`, `CLI\`,
+    `HelpViewer\`, `HelpModules\`, `Samples\`, and `Legal\`).
+================================================================================
+-->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Platforms>x64;ARM64</Platforms>
+    <RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <UseWindowsForms>true</UseWindowsForms>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <NoWarn>$(NoWarn);WFO5001;MSB3277</NoWarn>
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+    <AssemblyName>RaggieSoftHelp</AssemblyName>
+    <RootNamespace>RaggieSoft.HelpViewer</RootNamespace>
+    <OutputPath>..\..\build\INSTALLDIR\$(Configuration)\HelpViewer\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+    <Version>1.0.0</Version>
+    <FileVersion>1.0.0.0</FileVersion>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <Company>RaggieSoft Media</Company>
+    <Product>RaggieSoft Help Viewer</Product>
+    <Authors>Michael P. Ragsdale</Authors>
+    <Copyright>Copyright © 2026 Michael P. Ragsdale (MIT License)</Copyright>
+    <ApplicationIcon>..\AccessibilityStudio.WinForms\Assets\AccessibilityStudio.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2903.40" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="..\AccessibilityStudio.WinForms\Assets\AccessibilityStudio.ico" Link="Assets\AccessibilityStudio.ico" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

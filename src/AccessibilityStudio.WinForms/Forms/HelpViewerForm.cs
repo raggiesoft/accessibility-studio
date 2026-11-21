@@ -615,7 +615,16 @@ public sealed partial class HelpViewerForm : Form
 
     private static string ResolveOrMaterializeHelpDirectory()
     {
-        // 1. Prefer pre-installed `<InstallDir>\Help\` unpacked by InstallAware Studio X18 MSI
+        // 1. Prefer `[INSTALLDIR]\HelpModules\raggiesoft.accessibility-studio\` (from `[INSTALLDIR]\StudioIDE\`)
+        string installDirModule = Path.GetFullPath(
+            Path.Combine(AppContext.BaseDirectory, "..", "HelpModules", "raggiesoft.accessibility-studio"));
+        if (File.Exists(Path.Combine(installDirModule, "welcome-overview.html")) &&
+            File.Exists(Path.Combine(installDirModule, "rule-reference.html")))
+        {
+            return installDirModule;
+        }
+
+        // 2. Check legacy `<BaseDir>\Help\`
         string installedHelpDir = Path.Combine(AppContext.BaseDirectory, "Help");
         if (File.Exists(Path.Combine(installedHelpDir, "welcome-overview.html")) &&
             File.Exists(Path.Combine(installedHelpDir, "rule-reference.html")))
@@ -623,7 +632,7 @@ public sealed partial class HelpViewerForm : Form
             return installedHelpDir;
         }
 
-        // 2. Otherwise materialize the offline HTML5 Help bundle into `%LOCALAPPDATA%`
+        // 3. Otherwise materialize the offline HTML5 Help bundle into `%LOCALAPPDATA%`
         string cachedHelpDir = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "RaggieSoft",

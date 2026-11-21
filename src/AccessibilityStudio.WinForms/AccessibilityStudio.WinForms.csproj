@@ -33,6 +33,10 @@ PLAIN-ENGLISH OVERVIEW (100-LEVEL WINFORMS PROJECT GUIDE):
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
     <AssemblyName>AccessibilityStudio</AssemblyName>
     <RootNamespace>AccessibilityStudio.WinForms</RootNamespace>
+    <!-- Output directly into the logical `[INSTALLDIR]\StudioIDE\` feature folder -->
+    <OutputPath>..\..\build\INSTALLDIR\$(Configuration)\StudioIDE\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
     <Version>1.0.0</Version>
     <FileVersion>1.0.0.0</FileVersion>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
@@ -50,10 +54,50 @@ PLAIN-ENGLISH OVERVIEW (100-LEVEL WINFORMS PROJECT GUIDE):
   <ItemGroup>
     <ProjectReference Include="..\AccessibilityStudio.Core\AccessibilityStudio.Core.csproj" />
     <ProjectReference Include="..\AccessibilityStudio.Reporting\AccessibilityStudio.Reporting.csproj" />
+    <!-- Ensure building AccessibilityStudio.WinForms (`F5` / `Ctrl+Shift+B`) also populates sibling `[INSTALLDIR]` feature folders -->
+    <ProjectReference Include="..\AccessibilityStudio.Cli\AccessibilityStudio.Cli.csproj"
+                      ReferenceOutputAssembly="false"
+                      SkipGetTargetFrameworkProperties="true"
+                      SetPlatform="Platform=AnyCPU" />
+    <ProjectReference Include="..\RaggieSoft.HelpViewer\RaggieSoft.HelpViewer.csproj"
+                      ReferenceOutputAssembly="false"
+                      SkipGetTargetFrameworkProperties="true" />
   </ItemGroup>
 
   <ItemGroup>
     <Content Include="Assets\AccessibilityStudio.ico" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="Assets\AccessibilityStudio.png" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
+
+  <!--
+    Post-Build `[INSTALLDIR]` Feature Tree Assembly:
+    Divides `..\..\build\INSTALLDIR\$(Configuration)\` into 6 clean MSI Self-Healing Features:
+      1. `StudioIDE\`     (Core Workstation IDE — KeyPath: `AccessibilityStudio.exe`)
+      2. `CLI\`           (Headless CI/CD Scanner — KeyPath: `a11y-studio-cli.exe`)
+      3. `HelpViewer\`    (Standalone RaggieSoft Help Engine — KeyPath: `RaggieSoftHelp.exe`)
+      4. `HelpModules\raggiesoft.accessibility-studio\` (Pluggable Help Module — KeyPath: `module.rshm.json`)
+      5. `Samples\`       (Reference Courseware Fixtures — KeyPath: `SampleCourseWorkspace.a11yproj`)
+      6. `Legal\`         (MIT & SPDX Attribution Notices — KeyPath: `LICENSE`)
+  -->
+  <Target Name="StageInstallDirFeatures" AfterTargets="Build">
+    <PropertyGroup>
+      <InstallDirRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../../build/INSTALLDIR/$(Configuration)'))</InstallDirRoot>
+      <RepoRootDir>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../..'))</RepoRootDir>
+      <CliDllPath>$([System.IO.Path]::Combine('$(InstallDirRoot)', 'CLI', 'a11y-studio-cli.dll'))</CliDllPath>
+      <HelpModuleOutDir>$([System.IO.Path]::Combine('$(InstallDirRoot)', 'HelpModules', 'raggiesoft.accessibility-studio'))</HelpModuleOutDir>
+      <SamplesOutDir>$([System.IO.Path]::Combine('$(InstallDirRoot)', 'Samples'))</SamplesOutDir>
+      <LegalOutDir>$([System.IO.Path]::Combine('$(InstallDirRoot)', 'Legal'))</LegalOutDir>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <SampleFixtures Include="$(RepoRootDir)/samples/*.*" />
+      <LegalDocs Include="$(RepoRootDir)/LICENSE;$(RepoRootDir)/THIRD-PARTY-NOTICES.txt;$(RepoRootDir)/README.md" />
+    </ItemGroup>
+
+    <MakeDir Directories="$(HelpModuleOutDir);$(SamplesOutDir);$(LegalOutDir)" />
+    <Copy SourceFiles="@(SampleFixtures)" DestinationFolder="$(SamplesOutDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(LegalDocs)" DestinationFolder="$(LegalOutDir)" SkipUnchangedFiles="true" />
+
+    <Exec Command="dotnet &quot;$(CliDllPath)&quot; export-help &quot;$(HelpModuleOutDir)&quot;" />
+  </Target>
 </Project>

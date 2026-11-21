@@ -1,0 +1,16 @@
+{
+  "SchemaVersion": "1.0",
+  "ProjectName": "Reference Courseware & Public-Sector Sample Suite",
+  "RootDirectory": ".",
+  "ComplianceProfile": "Wcag22AA_Section508",
+  "BatchThrottleDelayMs": 1500,
+  "IncludedExtensions": [
+    ".html",
+    ".htm",
+    ".css",
+    ".vtt",
+    ".astro",
+    ".svelte"
+  ],
+  "BatchUrls": []
+}

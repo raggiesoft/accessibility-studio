@@ -209,15 +209,20 @@ public static class Program
                 $"Help chapter {topic.TopicId}.html must have 0 WCAG violations (found {selfAudit.Findings.Count}: {string.Join(", ", selfAudit.Findings.Select(f => $"{f.RuleId}@L{f.StartLine}"))})");
         }
 
-        // Verify disk bundle export writes `index.html`, `help.css`, `search-index.json`, and all chapter pages
+        // Verify disk bundle export writes `module.rshm.json`, `index.html`, `help.css`, `search-index.json`, and all chapter pages
         string tempDir = Path.Combine(Path.GetTempPath(), $"a11y-help-test-{Guid.NewGuid():N}");
         try
         {
             IReadOnlyList<string> written = StudioHelpCatalog.ExportOfflineHtml5Bundle(tempDir);
-            Assert(written.Count == topics.Count + 3, $"Exported {topics.Count + 3} offline Help files");
+            Assert(written.Count == topics.Count + 4, $"Exported {topics.Count + 4} offline Help module files");
+            Assert(File.Exists(Path.Combine(tempDir, "module.rshm.json")), "Exported module.rshm.json");
             Assert(File.Exists(Path.Combine(tempDir, "index.html")), "Exported index.html");
             Assert(File.Exists(Path.Combine(tempDir, "help.css")), "Exported help.css");
             Assert(File.Exists(Path.Combine(tempDir, "search-index.json")), "Exported search-index.json");
+
+            using JsonDocument modDoc = JsonDocument.Parse(File.ReadAllText(Path.Combine(tempDir, "module.rshm.json")));
+            Assert(modDoc.RootElement.GetProperty("moduleId").GetString() == "raggiesoft.accessibility-studio",
+                "module.rshm.json declares moduleId raggiesoft.accessibility-studio");
         }
         finally
         {

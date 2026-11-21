@@ -1,0 +1,19 @@
+/* ============================================================================
+   FILE: samples/SamplePortalStyles.css
+   PURPOSE: Reference CSS fixture installed to `[INSTALLDIR]\Samples\` with
+            intentional contrast, suppressed focus, and reduced-motion issues.
+   ============================================================================ */
+.hero-callout {
+  color: #9aa3b2;
+  background-color: #ffffff;
+  padding: 1rem;
+}
+
+.portal-action-button:focus {
+  outline: none;
+}
+
+@keyframes marqueeFloat {
+  from { transform: translateY(0); }
+  to { transform: translateY(-8px); }
+}

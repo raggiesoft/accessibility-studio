@@ -1,0 +1,47 @@
+<!--
+================================================================================
+FILE: samples/SampleCourseModule.html
+PURPOSE: Reference training fixture installed to `[INSTALLDIR]\Samples\` so
+         engineers can test HTML5/WAI-ARIA detection and Guided Diff Refactoring
+         immediately without modifying production repositories.
+================================================================================
+-->
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    .course-banner { background-color: #ffffff; color: #8c95a4; padding: 12px; }
+    .nav-link:focus { outline: none; }
+  </style>
+</head>
+<body>
+  <nav>
+    <a class="nav-link" href="#syllabus" tabindex="3">Click here</a>
+  </nav>
+  <nav>
+    <a class="nav-link" href="#modules">Modules</a>
+  </nav>
+  <main id="syllabus">
+    <h1>CS 410 — Enterprise Systems Architecture</h1>
+    <h4>Weekly Schedule &amp; Grading</h4>
+    <p class="course-banner">All lecture recordings include synchronized captions.</p>
+    <img src="/assets/architecture-diagram.png">
+    <table>
+      <tr>
+        <td style="font-weight: bold;">Week</td>
+        <td style="font-weight: bold;">Topic</td>
+      </tr>
+      <tr>
+        <td>Week 1</td>
+        <td>Distributed Fault Tolerance</td>
+      </tr>
+    </table>
+    <form action="/enroll" method="post">
+      <input type="email" name="studentEmail" placeholder="Enter campus email">
+      <button type="submit" aria-hidden="true">Register</button>
+    </form>
+    <video controls src="/media/week1-lecture.mp4"></video>
+  </main>
+</body>
+</html>
