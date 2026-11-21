@@ -87,6 +87,14 @@ public sealed class MainIdeForm : Form
     private bool _emulateReflow400;
     private bool _showTabOrderBadges;
 
+    // Color-scheme override for embedded Monaco & Live Inspector WebView2 surfaces
+    // (`Auto` = follows Windows `prefers-color-scheme` via .NET 10 `SystemColorMode.System`).
+    private CoreWebView2PreferredColorScheme _preferredColorScheme = CoreWebView2PreferredColorScheme.Auto;
+
+    // Main splitters stored as fields so proportional distances apply cleanly after DPI layout.
+    private SplitContainer _outerSplit = null!;
+    private SplitContainer _rightVerticalSplit = null!;
+
     // Cancellation token source for stopping long-running polite batch scans cleanly.
     private CancellationTokenSource? _batchCts;
 
@@ -282,8 +290,40 @@ public sealed class MainIdeForm : Form
         // Apply any enterprise IT Group Policy (`HKLM` / `HKCU`) registry settings
         LoadEnterprisePolicyDefaults();
 
-        // Initialize WebView2 instances and load initial target once the window handle is ready
-        Load += async (_, _) => await InitializeIdeAsync();
+        // Listen for live Windows 11 Light/Dark/Contrast theme changes while the IDE is open
+        if (OperatingSystem.IsWindows())
+        {
+            SystemEvents.UserPreferenceChanged += OnSystemUserPreferenceChanged;
+        }
+
+        // Initialize WebView2 instances and proportional splitters once the window handle & DPI layout are ready
+        Load += async (_, _) =>
+        {
+            ApplyDefaultSplitterProportions();
+            await InitializeIdeAsync();
+        };
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing && OperatingSystem.IsWindows())
+        {
+            SystemEvents.UserPreferenceChanged -= OnSystemUserPreferenceChanged;
+        }
+        base.Dispose(disposing);
+    }
+
+    protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+    {
+        // Handle standalone `Escape` here because WinForms `ToolStripManager.IsValidShortcut`
+        // forbids unmodified `Keys.Escape` on `ToolStripMenuItem.ShortcutKeys`!
+        if (keyData == Keys.Escape && _isInDiffMode)
+        {
+            ExitDiffMode();
+            return true;
+        }
+
+        return base.ProcessCmdKey(ref msg, keyData);
     }
 
     // ----------------------------------------------------------------------------
@@ -355,6 +395,13 @@ public sealed class MainIdeForm : Form
             dlg.ShowDialog(this);
         }));
 
+        ToolStripMenuItem mnuTheme = new("Editor &Theme");
+        mnuTheme.DropDownItems.Add(CreateMenuItem("Follow Windows &System Mode (prefers-color-scheme)", Keys.None, (_, _) => ApplyWebViewThemePreference(CoreWebView2PreferredColorScheme.Auto)));
+        mnuTheme.DropDownItems.Add(CreateMenuItem("Force &Dark Editor Theme (VS Dark)", Keys.None, (_, _) => ApplyWebViewThemePreference(CoreWebView2PreferredColorScheme.Dark)));
+        mnuTheme.DropDownItems.Add(CreateMenuItem("Force &Light Editor Theme (VS Light)", Keys.None, (_, _) => ApplyWebViewThemePreference(CoreWebView2PreferredColorScheme.Light)));
+        mnuTools.DropDownItems.Add(new ToolStripSeparator());
+        mnuTools.DropDownItems.Add(mnuTheme);
+
         ToolStripMenuItem mnuHelp = new("&Help");
         mnuHelp.DropDownItems.Add(CreateMenuItem("&About RaggieSoft Accessibility Studio…", Keys.F1, (_, _) =>
         {
@@ -424,9 +471,12 @@ public sealed class MainIdeForm : Form
 
     private void BuildMainSplitterWorkspace()
     {
-        // Outer horizontal split: Left = Workspace Explorer (`280px`), Right = Editor + Bottom Diagnostics
-        SplitContainer outerSplit = new()
+        // Outer horizontal split: Left = Workspace Explorer (`285px`), Right = Editor + Bottom Diagnostics.
+        // Note: Set an explicit large `Size` BEFORE `SplitterDistance` because a newly constructed
+        // `SplitContainer` defaults to `150x100` prior to layout, which would clamp `490px` down!
+        _outerSplit = new SplitContainer
         {
+            Size = new Size(1460, 820),
             Dock = DockStyle.Fill,
             Orientation = Orientation.Vertical,
             SplitterDistance = 285,
@@ -463,11 +513,12 @@ public sealed class MainIdeForm : Form
         explorerPanel.Controls.Add(_workspaceTree);
         explorerPanel.Controls.Add(_txtExplorerFilter);
         explorerPanel.Controls.Add(lblExplorerHeader);
-        outerSplit.Panel1.Controls.Add(explorerPanel);
+        _outerSplit.Panel1.Controls.Add(explorerPanel);
 
         // Inner vertical split on the right: Top = Editor/Inspector/Batch (`62%`), Bottom = Error List/Outline/Logs (`38%`)
-        SplitContainer rightVerticalSplit = new()
+        _rightVerticalSplit = new SplitContainer
         {
+            Size = new Size(1160, 820),
             Dock = DockStyle.Fill,
             Orientation = Orientation.Horizontal,
             SplitterDistance = 490
@@ -490,7 +541,7 @@ public sealed class MainIdeForm : Form
         BuildBatchQueueTab(tabBatch);
 
         _centerTabs.TabPages.AddRange([tabEditor, tabInspector, tabBatch]);
-        rightVerticalSplit.Panel1.Controls.Add(_centerTabs);
+        _rightVerticalSplit.Panel1.Controls.Add(_centerTabs);
 
         // --- LOWER-RIGHT DIAGNOSTICS & LOGGING TABS ---
         TabPage tabErrors = new("WCAG 2.2 & Section 508 Error List");
@@ -513,15 +564,34 @@ public sealed class MainIdeForm : Form
         BuildSessionLogTab(tabLogs);
 
         _bottomTabs.TabPages.AddRange([tabErrors, tabGuidedFix, tabOutline, tabLogs]);
-        rightVerticalSplit.Panel2.Controls.Add(_bottomTabs);
+        _rightVerticalSplit.Panel2.Controls.Add(_bottomTabs);
 
-        outerSplit.Panel2.Controls.Add(rightVerticalSplit);
+        _outerSplit.Panel2.Controls.Add(_rightVerticalSplit);
 
         // Add controls in WinForms Z-order (`DockStyle.Fill` added first, `Top`/`Bottom` bars added after)
-        Controls.Add(outerSplit);
+        Controls.Add(_outerSplit);
         Controls.Add(_mainToolbar);
         Controls.Add(_mainMenu);
         Controls.Add(_statusBar);
+    }
+
+    private void ApplyDefaultSplitterProportions()
+    {
+        try
+        {
+            if (_outerSplit.Width > 420)
+            {
+                _outerSplit.SplitterDistance = Math.Clamp(285, 200, _outerSplit.Width - 320);
+            }
+            if (_rightVerticalSplit.Height > 320)
+            {
+                _rightVerticalSplit.SplitterDistance = (int)(_rightVerticalSplit.Height * 0.60);
+            }
+        }
+        catch
+        {
+            // Ignore transient layout bounds on minimized startup
+        }
     }
 
     private void BuildBatchQueueTab(TabPage tabBatch)
@@ -754,6 +824,9 @@ public sealed class MainIdeForm : Form
             // 3. Initialize Authenticated SSO Browser WebView2
             await _ssoBrowserWebView.EnsureCoreWebView2Async(env);
             _ssoWebViewReady = true;
+
+            // Synchronize Chromium `prefers-color-scheme` across all three WebView2 surfaces
+            ApplyWebViewThemePreference(_preferredColorScheme);
         }
         catch (Exception ex)
         {
@@ -1645,10 +1718,61 @@ public sealed class MainIdeForm : Form
             _ => ComplianceProfile.Wcag22AA_Section508
         };
 
+    private void OnSystemUserPreferenceChanged(object sender, UserPreferenceChangedEventArgs e)
+    {
+        if (e.Category is UserPreferenceCategory.General or UserPreferenceCategory.Color or UserPreferenceCategory.VisualStyle)
+        {
+            if (IsHandleCreated)
+            {
+                BeginInvoke(() => ApplyWebViewThemePreference(_preferredColorScheme));
+            }
+        }
+    }
+
+    private void ApplyWebViewThemePreference(CoreWebView2PreferredColorScheme scheme)
+    {
+        _preferredColorScheme = scheme;
+        bool useDark = scheme switch
+        {
+            CoreWebView2PreferredColorScheme.Dark => true,
+            CoreWebView2PreferredColorScheme.Light => false,
+            _ => Application.IsDarkModeEnabled
+        };
+
+        try
+        {
+            if (_editorWebView.CoreWebView2 is not null)
+            {
+                _editorWebView.CoreWebView2.Profile.PreferredColorScheme = scheme;
+                string payload = JsonSerializer.Serialize(new { cmd = "setTheme", dark = useDark });
+                _editorWebView.CoreWebView2.PostWebMessageAsJson(payload);
+            }
+            if (_inspectorWebView.CoreWebView2 is not null)
+            {
+                _inspectorWebView.CoreWebView2.Profile.PreferredColorScheme = scheme;
+            }
+            if (_ssoBrowserWebView.CoreWebView2 is not null)
+            {
+                _ssoBrowserWebView.CoreWebView2.Profile.PreferredColorScheme = scheme;
+            }
+        }
+        catch
+        {
+            // Ignore if WebView2 profile is still initializing
+        }
+    }
+
     private static ToolStripMenuItem CreateMenuItem(string text, Keys shortcut, EventHandler onClick)
     {
         ToolStripMenuItem item = new(text, null, onClick);
-        if (shortcut != Keys.None)
+        if (shortcut == Keys.Escape)
+        {
+            // WinForms `ToolStripManager.IsValidShortcut` rejects unmodified `Keys.Escape` (27)
+            // on `ShortcutKeys` (throwing `InvalidEnumArgumentException`). Display "Esc" on the
+            // menu item and handle the keystroke cleanly inside `MainIdeForm.ProcessCmdKey`!
+            item.ShortcutKeyDisplayString = "Esc";
+        }
+        else if (shortcut != Keys.None && ToolStripManager.IsValidShortcut(shortcut))
         {
             item.ShortcutKeys = shortcut;
         }
