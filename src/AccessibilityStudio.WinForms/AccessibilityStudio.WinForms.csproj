@@ -1,0 +1,59 @@
+<!--
+================================================================================
+FILE: AccessibilityStudio.WinForms.csproj
+PROJECT: RaggieSoft Accessibility Studio (Enterprise C# .NET 10 WinForms IDE)
+LICENSE: MIT License
+================================================================================
+PLAIN-ENGLISH OVERVIEW (100-LEVEL WINFORMS PROJECT GUIDE):
+  What is this file?
+    Configures our flagship Windows desktop IDE (`AccessibilityStudio.exe`):
+      - `UseWindowsForms=true` + `TargetFramework=net10.0-windows`: Enables .NET 10
+        Windows Forms with native `SystemColorMode.System` Dark/Light Mode and
+        Per-Monitor V2 High-DPI rendering.
+      - `EnableWindowsTargeting=true`: Lets `dotnet build` compile and type-check
+        100% of our WinForms C# code on macOS and Linux CI runners as well as in
+        Visual Studio 2026 on Windows 11 Pro!
+      - `Microsoft.Web.WebView2`: Hosts both our Monaco Syntax/Diff Code Editor
+        and our Live Chromium Visual DOM & Emulation Inspector inside native
+        WinForms docking/splitter panels.
+================================================================================
+-->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Platforms>x64;ARM64</Platforms>
+    <RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <UseWindowsForms>true</UseWindowsForms>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <NoWarn>$(NoWarn);WFO5001;MSB3277</NoWarn>
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+    <AssemblyName>AccessibilityStudio</AssemblyName>
+    <RootNamespace>AccessibilityStudio.WinForms</RootNamespace>
+    <Version>1.0.0</Version>
+    <FileVersion>1.0.0.0</FileVersion>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <Company>RaggieSoft Media</Company>
+    <Product>RaggieSoft Accessibility Studio</Product>
+    <Authors>Michael P. Ragsdale</Authors>
+    <Copyright>Copyright © 2026 Michael P. Ragsdale (MIT License)</Copyright>
+    <ApplicationIcon>Assets\AccessibilityStudio.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2903.40" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AccessibilityStudio.Core\AccessibilityStudio.Core.csproj" />
+    <ProjectReference Include="..\AccessibilityStudio.Reporting\AccessibilityStudio.Reporting.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Assets\AccessibilityStudio.ico" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Assets\AccessibilityStudio.png" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

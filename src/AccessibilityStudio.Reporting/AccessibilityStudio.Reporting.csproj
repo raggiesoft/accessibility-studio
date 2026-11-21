@@ -1,0 +1,29 @@
+<!--
+================================================================================
+FILE: AccessibilityStudio.Reporting.csproj
+PROJECT: AccessibilityStudio.Reporting (HTML5, SARIF 2.1.0, CSV & JSON Reports)
+LICENSE: MIT License
+================================================================================
+PLAIN-ENGLISH OVERVIEW (100-LEVEL GUIDE):
+  Generates enterprise audit deliverables—including self-contained WCAG 2.2 AA
+  HTML5 reports, OASIS SARIF 2.1.0 static-analysis logs, formula-safe CSV sheets,
+  and structured JSON archives—from `WorkspaceAuditReport` models.
+================================================================================
+-->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>AccessibilityStudio.Reporting</RootNamespace>
+    <AssemblyName>AccessibilityStudio.Reporting</AssemblyName>
+    <Version>1.0.0</Version>
+    <Company>RaggieSoft Media</Company>
+    <Product>RaggieSoft Accessibility Studio Reporting Engine</Product>
+    <Authors>Michael P. Ragsdale</Authors>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\AccessibilityStudio.Core\AccessibilityStudio.Core.csproj" />
+  </ItemGroup>
+</Project>
