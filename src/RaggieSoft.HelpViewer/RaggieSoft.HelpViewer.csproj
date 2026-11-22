@@ -53,6 +53,12 @@ PLAIN-ENGLISH OVERVIEW (100-LEVEL MODULAR WINDOWS HELP ARCHITECTURE):
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="..\AccessibilityStudio.WinForms\Forms\RaggieSoftStartupSplashScope.cs" Link="Forms\RaggieSoftStartupSplashScope.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Include="..\AccessibilityStudio.WinForms\Assets\AccessibilityStudio.ico" Link="Assets\AccessibilityStudio.ico" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Assets\AppSplashBackdrop.png" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Assets\AppSplash.png" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

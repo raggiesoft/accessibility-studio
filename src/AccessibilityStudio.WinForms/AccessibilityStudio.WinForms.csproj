@@ -72,6 +72,8 @@ PLAIN-ENGLISH OVERVIEW (100-LEVEL WINFORMS PROJECT GUIDE):
   <ItemGroup>
     <Content Include="Assets\AccessibilityStudio.ico" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="Assets\AccessibilityStudio.png" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Assets\AppSplashBackdrop.png" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Assets\AppSplash.png" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <!--

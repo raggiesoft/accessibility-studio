@@ -28,6 +28,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
+using AccessibilityStudio.WinForms.Forms;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.WinForms;
 using Microsoft.Win32;
@@ -189,9 +190,13 @@ public sealed class ModularHelpViewerForm : Form
 
         Load += async (_, _) =>
         {
+            using var splash = RaggieSoftStartupSplashScope.Begin(
+                "RaggieSoft Help Viewer",
+                "Opening offline documentation library...");
             ApplySafeSplitterDistance();
             _ = SingleInstanceHelpIpc.RunListenerLoopAsync(OnExternalIpcRequest, _ipcCts.Token);
             await InitializeWebViewAsync();
+            await splash.CompleteAsync();
         };
     }
 

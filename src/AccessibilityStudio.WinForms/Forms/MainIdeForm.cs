@@ -309,11 +309,17 @@ public sealed class MainIdeForm : Form
             OpenContextSensitiveHelp(forceRuleTopic: false);
         };
 
-        // Initialize WebView2 instances and proportional splitters once the window handle & DPI layout are ready
+        // Initialize WebView2 instances and proportional splitters once the window handle & DPI layout are ready.
+        // Uses our shared 250 ms delayed-threshold splash card so fast warm launches never flash, while cold-start
+        // Chromium / workspace initialization shows crisp RaggieSoft progress!
         Load += async (_, _) =>
         {
+            using var splash = RaggieSoftStartupSplashScope.Begin(
+                "RaggieSoft Accessibility Studio",
+                "Preparing workspace and offline rule catalog...");
             ApplyDefaultSplitterProportions();
-            await InitializeIdeAsync();
+            await InitializeIdeAsync(splash);
+            await splash.CompleteAsync();
         };
     }
 
@@ -811,7 +817,7 @@ public sealed class MainIdeForm : Form
         }
     }
 
-    private async Task InitializeIdeAsync()
+    private async Task InitializeIdeAsync(RaggieSoftStartupSplashScope? splash = null)
     {
         bool isDark = Application.IsDarkModeEnabled;
 
@@ -825,6 +831,7 @@ public sealed class MainIdeForm : Form
 
         try
         {
+            splash?.UpdateStatus("Starting editor and live preview engines...");
             Directory.CreateDirectory(userDataFolder);
             CoreWebView2Environment env = await CoreWebView2Environment.CreateAsync(null, userDataFolder);
 
@@ -849,6 +856,7 @@ public sealed class MainIdeForm : Form
             _editorWebView.NavigateToString(MonacoHostHtmlBuilder.BuildEditorHostHtml(isDark, localMonacoUri));
 
             // 2. Initialize Live Chromium DOM & Emulation Inspector WebView2
+            splash?.UpdateStatus("Preparing visual accessibility inspector...");
             await _inspectorWebView.EnsureCoreWebView2Async(env);
             _inspectorWebView.CoreWebView2.Settings.IsStatusBarEnabled = false;
             _inspectorWebViewReady = true;
@@ -869,6 +877,7 @@ public sealed class MainIdeForm : Form
         }
 
         // Open startup target passed via CLI/Explorer or load built-in sample course workspace
+        splash?.UpdateStatus("Loading initial workspace files...");
         if (!string.IsNullOrWhiteSpace(_startupTarget))
         {
             LoadStartupPath(_startupTarget);
