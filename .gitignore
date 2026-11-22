@@ -17,9 +17,7 @@ docs/api/.manifest
 Thumbs.db
 desktop.ini
 
-# Private InstallAware Studio X18 build scripts, certificates & MSI staging payloads
-# (Synced privately via ~/Developer/backup.sh to Parallels Windows 11 Pro VM; NEVER pushed to public GitHub)
-installaware-private/
+# Signing keys & local installer artifacts (InstallAware workspace lives at /desktop-apps/installaware/)
 *.mia
 *.mial
 *.miab
