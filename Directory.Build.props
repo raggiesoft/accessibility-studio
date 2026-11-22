@@ -1,0 +1,36 @@
+<!--
+================================================================================
+FILE: Directory.Build.props
+SOLUTION: RaggieSoftAccessibilityStudio.slnx
+LICENSE: MIT License
+================================================================================
+PLAIN-ENGLISH OVERVIEW (100-LEVEL MULTI-ARCHITECTURE MSBUILD GUIDE):
+  What does `Directory.Build.props` do?
+    MSBuild automatically imports `Directory.Build.props` into EVERY `.csproj`
+    underneath this repository root before evaluating project-specific settings.
+
+  Why declare `x64;ARM64` and `win-x64;win-arm64` solution-wide here?
+    1. Ensures NuGet restores both AMD64 (`win-x64`) and AArch64 (`win-arm64`)
+       runtime graphs into every project's `obj/project.assets.json` in one pass.
+    2. Defaults unspecified CLI `$(Platform)` builds to the host CPU (`ARM64` on
+       Apple Silicon / Windows on ARM, `x64` on Intel/AMD) so `dotnet run` tests
+       execute natively—while `BuildCompanionArchitectureInstallDir` guarantees
+       BOTH `x64\` and `arm64\` `[INSTALLDIR]` trees are emitted on every build!
+================================================================================
+-->
+<Project>
+  <PropertyGroup>
+    <Platforms>x64;ARM64</Platforms>
+    <HostDefaultPlatform Condition="$([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture.ToString()) == 'Arm64'">ARM64</HostDefaultPlatform>
+    <HostDefaultPlatform Condition="'$(HostDefaultPlatform)' == ''">x64</HostDefaultPlatform>
+    <Platform Condition="'$(Platform)' == '' or '$(Platform)' == 'AnyCPU' or '$(Platform)' == 'Any CPU'">$(HostDefaultPlatform)</Platform>
+    <RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
+
+    <!-- Normalized folder slug (`x64` or `arm64`) and Windows RuntimeIdentifier (`win-x64` or `win-arm64`) -->
+    <TargetArchFolder Condition="'$(Platform)' == 'ARM64'">arm64</TargetArchFolder>
+    <TargetArchFolder Condition="'$(Platform)' != 'ARM64'">x64</TargetArchFolder>
+
+    <TargetWinRid Condition="'$(Platform)' == 'ARM64'">win-arm64</TargetWinRid>
+    <TargetWinRid Condition="'$(Platform)' != 'ARM64'">win-x64</TargetWinRid>
+  </PropertyGroup>
+</Project>

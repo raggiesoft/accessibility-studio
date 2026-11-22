@@ -20,8 +20,10 @@ PLAIN-ENGLISH OVERVIEW (100-LEVEL GUIDE):
     <LangVersion>latest</LangVersion>
     <AssemblyName>a11y-studio-cli</AssemblyName>
     <RootNamespace>AccessibilityStudio.Cli</RootNamespace>
-    <!-- Output directly into the logical `[INSTALLDIR]\CLI\` feature folder -->
-    <OutputPath>..\..\build\INSTALLDIR\$(Configuration)\CLI\</OutputPath>
+    <!-- Emit native Windows PE32+ executable (`win-x64` or `win-arm64`) into `build\INSTALLDIR\<Config>\<arch>\CLI\` -->
+    <RuntimeIdentifier>$(TargetWinRid)</RuntimeIdentifier>
+    <SelfContained>false</SelfContained>
+    <OutputPath>..\..\build\INSTALLDIR\$(Configuration)\$(TargetArchFolder)\CLI\</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
     <Version>1.0.0</Version>

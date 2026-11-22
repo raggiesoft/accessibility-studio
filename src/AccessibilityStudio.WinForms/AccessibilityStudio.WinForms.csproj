@@ -33,8 +33,10 @@ PLAIN-ENGLISH OVERVIEW (100-LEVEL WINFORMS PROJECT GUIDE):
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
     <AssemblyName>AccessibilityStudio</AssemblyName>
     <RootNamespace>AccessibilityStudio.WinForms</RootNamespace>
-    <!-- Output directly into the logical `[INSTALLDIR]\StudioIDE\` feature folder -->
-    <OutputPath>..\..\build\INSTALLDIR\$(Configuration)\StudioIDE\</OutputPath>
+    <!-- Emit native Windows PE32+ executable (`win-x64` or `win-arm64`) into `build\INSTALLDIR\<Config>\<arch>\StudioIDE\` -->
+    <RuntimeIdentifier>$(TargetWinRid)</RuntimeIdentifier>
+    <SelfContained>false</SelfContained>
+    <OutputPath>..\..\build\INSTALLDIR\$(Configuration)\$(TargetArchFolder)\StudioIDE\</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
     <Version>1.0.0</Version>
@@ -54,13 +56,16 @@ PLAIN-ENGLISH OVERVIEW (100-LEVEL WINFORMS PROJECT GUIDE):
   <ItemGroup>
     <ProjectReference Include="..\AccessibilityStudio.Core\AccessibilityStudio.Core.csproj" />
     <ProjectReference Include="..\AccessibilityStudio.Reporting\AccessibilityStudio.Reporting.csproj" />
-    <!-- Ensure building AccessibilityStudio.WinForms (`F5` / `Ctrl+Shift+B`) also populates sibling `[INSTALLDIR]` feature folders -->
+    <!-- Build-order dependencies so building WinForms (`F5` / `Ctrl+Shift+B`) populates sibling `CLI\` and `HelpViewer\` folders without copying their files into `StudioIDE\` -->
     <ProjectReference Include="..\AccessibilityStudio.Cli\AccessibilityStudio.Cli.csproj"
                       ReferenceOutputAssembly="false"
-                      SkipGetTargetFrameworkProperties="true"
-                      SetPlatform="Platform=AnyCPU" />
+                      Private="false"
+                      ExcludeAssets="all"
+                      SkipGetTargetFrameworkProperties="true" />
     <ProjectReference Include="..\RaggieSoft.HelpViewer\RaggieSoft.HelpViewer.csproj"
                       ReferenceOutputAssembly="false"
+                      Private="false"
+                      ExcludeAssets="all"
                       SkipGetTargetFrameworkProperties="true" />
   </ItemGroup>
 
@@ -70,20 +75,16 @@ PLAIN-ENGLISH OVERVIEW (100-LEVEL WINFORMS PROJECT GUIDE):
   </ItemGroup>
 
   <!--
-    Post-Build `[INSTALLDIR]` Feature Tree Assembly:
-    Divides `..\..\build\INSTALLDIR\$(Configuration)\` into 6 clean MSI Self-Healing Features:
-      1. `StudioIDE\`     (Core Workstation IDE — KeyPath: `AccessibilityStudio.exe`)
-      2. `CLI\`           (Headless CI/CD Scanner — KeyPath: `a11y-studio-cli.exe`)
-      3. `HelpViewer\`    (Standalone RaggieSoft Help Engine — KeyPath: `RaggieSoftHelp.exe`)
-      4. `HelpModules\raggiesoft.accessibility-studio\` (Pluggable Help Module — KeyPath: `module.rshm.json`)
-      5. `Samples\`       (Reference Courseware Fixtures — KeyPath: `SampleCourseWorkspace.a11yproj`)
-      6. `Legal\`         (MIT & SPDX Attribution Notices — KeyPath: `LICENSE`)
+    Post-Build Dual-Architecture (`x64` + `arm64`) `[INSTALLDIR]` Feature Tree Assembly:
+    1. Populates `HelpModules\`, `Samples\`, and `Legal\` for the active architecture (`x64` or `arm64`).
+    2. Automatically builds the companion CPU architecture (`ARM64` when `x64` is selected,
+       or `x64` when `ARM64` is selected) so EVERY Visual Studio build outputs BOTH native
+       AMD64 (`x64\`) and native AArch64 (`arm64\`) `[INSTALLDIR]` trees!
   -->
   <Target Name="StageInstallDirFeatures" AfterTargets="Build">
     <PropertyGroup>
-      <InstallDirRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../../build/INSTALLDIR/$(Configuration)'))</InstallDirRoot>
+      <InstallDirRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../../build/INSTALLDIR/$(Configuration)/$(TargetArchFolder)'))</InstallDirRoot>
       <RepoRootDir>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../..'))</RepoRootDir>
-      <CliDllPath>$([System.IO.Path]::Combine('$(InstallDirRoot)', 'CLI', 'a11y-studio-cli.dll'))</CliDllPath>
       <HelpModuleOutDir>$([System.IO.Path]::Combine('$(InstallDirRoot)', 'HelpModules', 'raggiesoft.accessibility-studio'))</HelpModuleOutDir>
       <SamplesOutDir>$([System.IO.Path]::Combine('$(InstallDirRoot)', 'Samples'))</SamplesOutDir>
       <LegalOutDir>$([System.IO.Path]::Combine('$(InstallDirRoot)', 'Legal'))</LegalOutDir>
@@ -97,7 +98,37 @@ PLAIN-ENGLISH OVERVIEW (100-LEVEL WINFORMS PROJECT GUIDE):
     <MakeDir Directories="$(HelpModuleOutDir);$(SamplesOutDir);$(LegalOutDir)" />
     <Copy SourceFiles="@(SampleFixtures)" DestinationFolder="$(SamplesOutDir)" SkipUnchangedFiles="true" />
     <Copy SourceFiles="@(LegalDocs)" DestinationFolder="$(LegalOutDir)" SkipUnchangedFiles="true" />
+  </Target>
 
-    <Exec Command="dotnet &quot;$(CliDllPath)&quot; export-help &quot;$(HelpModuleOutDir)&quot;" />
+  <Target Name="BuildCompanionArchitectureInstallDir"
+          AfterTargets="StageInstallDirFeatures"
+          Condition="'$(IsCompanionArchBuild)' != 'true'">
+    <PropertyGroup>
+      <CompanionPlatform Condition="'$(Platform)' == 'ARM64'">x64</CompanionPlatform>
+      <CompanionPlatform Condition="'$(Platform)' != 'ARM64'">ARM64</CompanionPlatform>
+      <HostArchSlug Condition="$([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture.ToString()) == 'Arm64'">arm64</HostArchSlug>
+      <HostArchSlug Condition="'$(HostArchSlug)' == ''">x64</HostArchSlug>
+      <GuestArchSlug Condition="'$(HostArchSlug)' == 'arm64'">x64</GuestArchSlug>
+      <GuestArchSlug Condition="'$(HostArchSlug)' != 'arm64'">arm64</GuestArchSlug>
+      <ConfigInstallRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../../build/INSTALLDIR/$(Configuration)'))</ConfigInstallRoot>
+      <HostCliDll>$([System.IO.Path]::Combine('$(ConfigInstallRoot)', '$(HostArchSlug)', 'CLI', 'a11y-studio-cli.dll'))</HostCliDll>
+      <HostCliRuntimeConfig>$([System.IO.Path]::Combine('$(ConfigInstallRoot)', '$(HostArchSlug)', 'CLI', 'a11y-studio-cli.runtimeconfig.json'))</HostCliRuntimeConfig>
+      <HostHelpModuleDir>$([System.IO.Path]::Combine('$(ConfigInstallRoot)', '$(HostArchSlug)', 'HelpModules', 'raggiesoft.accessibility-studio'))</HostHelpModuleDir>
+      <GuestHelpModuleDir>$([System.IO.Path]::Combine('$(ConfigInstallRoot)', '$(GuestArchSlug)', 'HelpModules', 'raggiesoft.accessibility-studio'))</GuestHelpModuleDir>
+    </PropertyGroup>
+
+    <Message Importance="High" Text="⚙️ [Dual-Arch INSTALLDIR] Building companion $(CompanionPlatform) [INSTALLDIR] feature tree..." />
+
+    <!-- Clear solution context (`BuildingSolutionFile=false`) so `Core` and `Reporting` also compile natively for `$(CompanionPlatform)` with 0 CS8012 warnings! -->
+    <MSBuild Projects="..\AccessibilityStudio.Core\AccessibilityStudio.Core.csproj;..\AccessibilityStudio.Reporting\AccessibilityStudio.Reporting.csproj;..\AccessibilityStudio.Cli\AccessibilityStudio.Cli.csproj;..\RaggieSoft.HelpViewer\RaggieSoft.HelpViewer.csproj;$(MSBuildProjectFullPath)"
+             Targets="Build"
+             Properties="Configuration=$(Configuration);Platform=$(CompanionPlatform);BuildingSolutionFile=false;CurrentSolutionConfigurationContents=;IsCompanionArchBuild=true" />
+
+    <!-- Export Help Module once using the host-native CLI (`arm64` on Apple Silicon / Windows on ARM, `x64` on Intel/AMD) and mirror to the second architecture -->
+    <Exec Command="dotnet exec --runtimeconfig &quot;$(HostCliRuntimeConfig)&quot; &quot;$(HostCliDll)&quot; export-help &quot;$(HostHelpModuleDir)&quot;" />
+    <ItemGroup>
+      <GeneratedHelpFiles Include="$(HostHelpModuleDir)/*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(GeneratedHelpFiles)" DestinationFolder="$(GuestHelpModuleDir)" SkipUnchangedFiles="true" />
   </Target>
 </Project>
