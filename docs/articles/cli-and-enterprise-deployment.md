@@ -31,7 +31,7 @@ a11y-studio-cli export-help ./Help
 When deployed via our Windows Installer (`.msi`) package, IT administrators can set fleet-wide policy defaults silently:
 
 ```bat
-msiexec /i RaggieSoftAccessibilityStudio-x64.msi /qn ^
+msiexec /i raggiesoft-accessibility-studio-setup.msi /qn ^
   ADD_CLI_TO_PATH=1 ^
   COMPLIANCE_PROFILE="Wcag22AA_Section508" ^
   BATCH_THROTTLE_MS="1500"

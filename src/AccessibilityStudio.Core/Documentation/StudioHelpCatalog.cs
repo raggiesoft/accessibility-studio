@@ -1480,7 +1480,7 @@ public static class StudioHelpCatalog
                     <p>
                       IT administrators can deploy the Windows Installer package unattended across managed Windows 11 Pro and Enterprise workstations while pre-configuring organization-wide compliance defaults:
                     </p>
-                    <pre><code>msiexec /i RaggieSoftAccessibilityStudio-x64.msi /qn ^
+                    <pre><code>msiexec /i raggiesoft-accessibility-studio-setup.msi /qn ^
                       ADD_CLI_TO_PATH=1 ^
                       COMPLIANCE_PROFILE="Wcag22AA_Section508" ^
                       BATCH_THROTTLE_MS="1500"</code></pre>
