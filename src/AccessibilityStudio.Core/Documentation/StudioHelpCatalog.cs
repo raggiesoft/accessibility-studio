@@ -1471,19 +1471,18 @@ public static class StudioHelpCatalog
             new HelpTopic(
                 TopicId: "enterprise-msi-gpo",
                 Category: "4. IT Deployment & Accessibility",
-                Title: "Enterprise MSI Deployment & Group Policy Registry Reference",
-                Summary: "Deploy RaggieSoft Accessibility Studio silently across Windows 11 Pro/Enterprise fleets via msiexec and configure HKLM Group Policy defaults.",
-                Keywords: ["msi", "msiexec", "installaware", "group policy", "gpo", "registry", "hklm", "silent install", "sccm", "intune"],
+                Title: "Silent Enterprise Deployment & Group Policy Registry Reference",
+                Summary: "Deploy RaggieSoft Accessibility Studio silently across Windows 11 Pro/Enterprise fleets via /s and configure HKLM Group Policy defaults.",
+                Keywords: ["silent", "installaware", "group policy", "gpo", "registry", "hklm", "silent install", "sccm", "intune", "winget"],
                 HtmlContent:
                     """
-                    <h2>Silent Enterprise MSI Deployment (Intune / ConfigMgr / GPO)</h2>
+                    <h2>Silent Enterprise Deployment (Intune / ConfigMgr / GPO / WinGet)</h2>
                     <p>
-                      IT administrators can deploy the Windows Installer package unattended across managed Windows 11 Pro and Enterprise workstations while pre-configuring organization-wide compliance defaults:
+                      IT administrators can deploy the universal <code>x64</code> + <code>ARM64</code> setup executable unattended across managed Windows 11 Pro and Enterprise workstations and pre-configure organization-wide compliance defaults via Group Policy or Registry:
                     </p>
-                    <pre><code>msiexec /i raggiesoft-accessibility-studio-setup.msi /qn ^
-                      ADD_CLI_TO_PATH=1 ^
-                      COMPLIANCE_PROFILE="Wcag22AA_Section508" ^
-                      BATCH_THROTTLE_MS="1500"</code></pre>
+                    <pre><code>raggiesoft-accessibility-studio-setup.exe /s
+                    reg add "HKLM\Software\Policies\RaggieSoft\AccessibilityStudio" /v ComplianceProfile /t REG_SZ /d Wcag22AA_Section508 /f
+                    reg add "HKLM\Software\Policies\RaggieSoft\AccessibilityStudio" /v BatchThrottleMs /t REG_DWORD /d 1500 /f</code></pre>
 
                     <h2>Windows Registry &amp; Group Policy Precedence</h2>
                     <p>

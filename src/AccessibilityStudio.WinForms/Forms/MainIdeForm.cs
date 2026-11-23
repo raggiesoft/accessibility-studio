@@ -429,7 +429,7 @@ public sealed class MainIdeForm : Form
         mnuHelp.DropDownItems.Add(CreateMenuItem("&Guided Source Refactoring Guide", Keys.None, (_, _) => OpenStudioHelp("guided-refactoring")));
         mnuHelp.DropDownItems.Add(CreateMenuItem("Complete &25-Rule WCAG && 508 Catalog", Keys.None, (_, _) => OpenStudioHelp("rule-reference")));
         mnuHelp.DropDownItems.Add(CreateMenuItem("Headless &CLI && CI/CD Scanner Reference", Keys.None, (_, _) => OpenStudioHelp("cli-cicd-reference")));
-        mnuHelp.DropDownItems.Add(CreateMenuItem("&Enterprise MSI && Group Policy Guide", Keys.None, (_, _) => OpenStudioHelp("enterprise-msi-gpo")));
+        mnuHelp.DropDownItems.Add(CreateMenuItem("&Enterprise Deployment && Group Policy Guide", Keys.None, (_, _) => OpenStudioHelp("enterprise-msi-gpo")));
         mnuHelp.DropDownItems.Add(CreateMenuItem("&Keyboard Shortcuts", Keys.None, (_, _) => OpenStudioHelp("keyboard-shortcuts")));
         mnuHelp.DropDownItems.Add(new ToolStripSeparator());
         mnuHelp.DropDownItems.Add(CreateMenuItem("Open &Online Documentation (a11y.raggiesoft.com/docs)…", Keys.None, (_, _) => LaunchOnlineDocumentation()));

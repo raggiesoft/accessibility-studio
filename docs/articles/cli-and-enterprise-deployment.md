@@ -1,4 +1,4 @@
-# Headless CLI (`a11y-studio-cli`) & Enterprise MSI / Group Policy Guide
+# Headless CLI (`a11y-studio-cli`) & Silent Enterprise / Group Policy Guide
 
 ## 1. Headless CI/CD Audits (`a11y-studio-cli`)
 
@@ -26,15 +26,14 @@ a11y-studio-cli export-help ./Help
 
 ---
 
-## 2. Silent Enterprise MSI Installation & Group Policy
+## 2. Silent Enterprise Deployment & Group Policy
 
-When deployed via our Windows Installer (`.msi`) package, IT administrators can set fleet-wide policy defaults silently:
+IT administrators can deploy the universal (`x64` + `ARM64`) single-file installer silently across managed Windows 11 Pro/Enterprise fleets via Intune, ConfigMgr, or WinGet and set fleet-wide policy defaults:
 
 ```bat
-msiexec /i raggiesoft-accessibility-studio-setup.msi /qn ^
-  ADD_CLI_TO_PATH=1 ^
-  COMPLIANCE_PROFILE="Wcag22AA_Section508" ^
-  BATCH_THROTTLE_MS="1500"
+raggiesoft-accessibility-studio-setup.exe /s
+reg add "HKLM\Software\Policies\RaggieSoft\AccessibilityStudio" /v ComplianceProfile /t REG_SZ /d Wcag22AA_Section508 /f
+reg add "HKLM\Software\Policies\RaggieSoft\AccessibilityStudio" /v BatchThrottleMs /t REG_DWORD /d 1500 /f
 ```
 
 ### Registry Policy Keys
