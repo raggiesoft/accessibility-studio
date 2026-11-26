@@ -21,7 +21,7 @@ PLAIN-ENGLISH OVERVIEW (100-LEVEL WINFORMS PROJECT GUIDE):
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net10.0-windows</TargetFramework>
+    <TargetFramework>net11.0-windows</TargetFramework>
     <Platforms>x64;ARM64</Platforms>
     <RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
     <Nullable>enable</Nullable>
@@ -117,6 +117,8 @@ PLAIN-ENGLISH OVERVIEW (100-LEVEL WINFORMS PROJECT GUIDE):
       <HostCliRuntimeConfig>$([System.IO.Path]::Combine('$(ConfigInstallRoot)', '$(HostArchSlug)', 'CLI', 'a11y-studio-cli.runtimeconfig.json'))</HostCliRuntimeConfig>
       <HostHelpModuleDir>$([System.IO.Path]::Combine('$(ConfigInstallRoot)', '$(HostArchSlug)', 'HelpModules', 'raggiesoft.accessibility-studio'))</HostHelpModuleDir>
       <GuestHelpModuleDir>$([System.IO.Path]::Combine('$(ConfigInstallRoot)', '$(GuestArchSlug)', 'HelpModules', 'raggiesoft.accessibility-studio'))</GuestHelpModuleDir>
+      <DotNetHostExe Condition="'$(DOTNET_HOST_PATH)' != ''">$(DOTNET_HOST_PATH)</DotNetHostExe>
+      <DotNetHostExe Condition="'$(DotNetHostExe)' == ''">dotnet</DotNetHostExe>
     </PropertyGroup>
 
     <Message Importance="High" Text="⚙️ [Dual-Arch INSTALLDIR] Building companion $(CompanionPlatform) [INSTALLDIR] feature tree..." />
@@ -127,7 +129,7 @@ PLAIN-ENGLISH OVERVIEW (100-LEVEL WINFORMS PROJECT GUIDE):
              Properties="Configuration=$(Configuration);Platform=$(CompanionPlatform);BuildingSolutionFile=false;CurrentSolutionConfigurationContents=;IsCompanionArchBuild=true" />
 
     <!-- Export Help Module once using the host-native CLI (`arm64` on Apple Silicon / Windows on ARM, `x64` on Intel/AMD) and mirror to the second architecture -->
-    <Exec Command="dotnet exec --runtimeconfig &quot;$(HostCliRuntimeConfig)&quot; &quot;$(HostCliDll)&quot; export-help &quot;$(HostHelpModuleDir)&quot;" />
+    <Exec Command="&quot;$(DotNetHostExe)&quot; exec --runtimeconfig &quot;$(HostCliRuntimeConfig)&quot; &quot;$(HostCliDll)&quot; export-help &quot;$(HostHelpModuleDir)&quot;" />
     <ItemGroup>
       <GeneratedHelpFiles Include="$(HostHelpModuleDir)/*.*" />
     </ItemGroup>
