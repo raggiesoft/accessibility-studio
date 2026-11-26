@@ -2,7 +2,7 @@
 
 **Enterprise Source-Level WCAG 2.2 AA & Revised Section 508 Web Engineering IDE & Headless CI/CD Scanner**
 
-- **Product Portal:** [https://a11y.raggiesoft.com](https://a11y.raggiesoft.com)
+- **Product Portal:** [https://raggiesoftstudio.com/accessibility-studio](https://raggiesoftstudio.com/accessibility-studio) *(permanent `301` target of `a11y.raggiesoft.com`)*
 - **Solution File:** `RaggieSoftAccessibilityStudio.slnx` (Visual Studio 2026 / .NET 10 SDK)
 - **Primary Stack:** C# 13 • .NET 10 Windows Forms (`SystemColorMode` Dark/Light + Per-Monitor V2 High-DPI) • Monaco Syntax & Side-by-Side Diff Editor (`WebView2`) • Live Chromium DOM & Emulation Inspector • Cross-Platform CLI (`a11y-studio-cli`)
 - **Code License:** [MIT License](LICENSE) *(Creative & sample narrative fixtures, if any, under CC BY-SA 4.0)*
